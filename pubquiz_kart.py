@@ -144,7 +144,7 @@ HTML_TEMPLATE = """\
 </div>
 <script>
   var map = L.map('map', {{ zoomControl: false, attributionControl: false }});
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/{tile_style}/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/{tile_style}/{{z}}/{{x}}/{{y}}{{r}}.png', {{
     maxZoom: 19
   }}).addTo(map);
 
@@ -168,13 +168,17 @@ HTML_TEMPLATE = """\
       }});
       L.marker([loc.lat, loc.lng], {{ icon: icon }}).addTo(map);
     }} else {{
-      L.circleMarker([loc.lat, loc.lng], {{
-        radius: {marker_radius},
-        fillColor: '{marker_color}',
-        fillOpacity: 1,
-        color: '{marker_border}',
-        weight: 3
-      }}).addTo(map);
+      var d = {marker_diameter};
+      var dotHtml = '<div style="width:'+d+'px;height:'+d+'px;background:{marker_color};'
+                  + 'border-radius:50%;border:3px solid {marker_border};'
+                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>';
+      var dotIcon = L.divIcon({{
+        className: '',
+        html: dotHtml,
+        iconSize: [d, d],
+        iconAnchor: [d/2, d/2]
+      }});
+      L.marker([loc.lat, loc.lng], {{ icon: dotIcon, zIndexOffset: 1000 }}).addTo(map);
     }}
     bounds.extend([loc.lat, loc.lng]);
   }});
@@ -189,7 +193,7 @@ HTML_TEMPLATE = """\
       html = '<div class="lm-svg-wrap">'
            + '<img src="data:image/svg+xml;base64,' + lm.svg_b64 + '" />'
            + '<div class="lm-label">' + lm.label + '</div></div>';
-      anchorY = sz + 2;
+      anchorY = sz;
     }} else if (lm.icon) {{
       html = '<div class="lm-emoji-wrap">'
            + '<span class="lm-emoji">' + lm.icon + '</span>'

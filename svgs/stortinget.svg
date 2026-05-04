@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Dome -->
+  <ellipse cx="24" cy="15" rx="9" ry="7" fill="#2c3e50"/>
+  <rect x="15" y="15" width="18" height="4" fill="#2c3e50"/>
+  <!-- Drum under dome -->
+  <rect x="17" y="11" width="14" height="8" fill="#2c3e50"/>
+  <!-- Colonnade -->
+  <rect x="5" y="22" width="38" height="3" fill="#1a252f"/>
+  <rect x="8"  y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="14" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="20" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="26" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="32" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="38" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <!-- Body behind columns -->
+  <rect x="7" y="25" width="34" height="13" fill="#2c3e50"/>
+  <!-- Columns on top -->
+  <rect x="8"  y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="14" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="20" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="26" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="32" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <rect x="38" y="25" width="3" height="13" fill="#ecf0f1"/>
+  <!-- Steps -->
+  <rect x="5" y="38" width="38" height="3" fill="#1a252f"/>
+  <rect x="3" y="41" width="42" height="3" fill="#1a252f"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Water/fjord -->
+  <rect x="0" y="40" width="48" height="8" fill="#a8c4d4" opacity="0.5"/>
+  <!-- Main sloped roof - the distinctive glacier shape -->
+  <polygon points="2,40 24,14 46,28 46,40" fill="#2c3e50"/>
+  <!-- Inner angled section -->
+  <polygon points="10,40 24,20 38,30 38,40" fill="#34495e"/>
+  <!-- Roof highlight lines -->
+  <line x1="2" y1="40" x2="24" y2="14" stroke="white" stroke-width="1" opacity="0.4"/>
+  <line x1="24" y1="14" x2="46" y2="28" stroke="white" stroke-width="1" opacity="0.4"/>
+  <!-- Glass facade strip -->
+  <polygon points="14,40 24,26 34,32 34,40" fill="#a8c4d4" opacity="0.6"/>
+  <!-- Base -->
+  <rect x="0" y="38" width="48" height="3" fill="#1a252f"/>
+</svg>

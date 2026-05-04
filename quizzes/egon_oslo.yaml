@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────
+#  PUBQUIZ KART – KONFIGURASJON
+#  Rediger denne filen for å lage nye varianter
+# ─────────────────────────────────────────────
+
+title: "Oslo"
+question: "Hva representerer markørene på kartet?"
+answer_label: "Svar"
+
+# tile_style: light_all | dark_all | voyager | light_nolabels
+tile_style: light_all
+fit_padding: 60
+
+marker_color: "#c0392b"
+marker_border: "#ffffff"
+marker_radius: 12
+
+# Størrelse på SVG-landemerke-ikoner (piksler)
+landmark_svg_size: 36
+
+# ─── QUIZ-MARKØRER ────────────────────────────
+# answer: brukes kun i fasitversjonen (--fasit eller --begge)
+markers:
+  - lat: 59.9499
+    lng: 10.7360
+    answer: "Egon Ullevål"
+  - lat: 59.9472
+    lng: 10.7751
+    answer: "Egon Storo"
+  - lat: 59.9142
+    lng: 10.7379
+    answer: "Egon Karl Johan"
+  - lat: 59.9117
+    lng: 10.7526
+    answer: "Egon Byporten"
+  - lat: 59.8612
+    lng: 10.8005
+    answer: "Egon Nordstrand"
+
+# ─── LANDEMERKER ──────────────────────────────
+# Kun stedsnavn for geografisk orientering – ingen overlapp med markører
+landmarks:
+  - lat: 59.9218
+    lng: 10.7269
+    label: "Majorstuen"
+  - lat: 59.9172
+    lng: 10.7276
+    label: "Slottet"
+  - lat: 59.9060
+    lng: 10.7430
+    label: "Sentrum"
+

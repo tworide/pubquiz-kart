@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oslo – Pubquiz</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Georgia', serif; background: #f5f0e8; }
+  .page {
+    width: 297mm; min-height: 210mm; margin: 0 auto;
+    background: #faf8f3; display: flex; flex-direction: column;
+  }
+  header {
+    padding: 14px 28px 10px; border-bottom: 2px solid #1a1a1a;
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  header h1 {
+    font-size: 22px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #1a1a1a;
+  }
+  header p { font-size: 12px; color: #666; letter-spacing: 0.04em; }
+  .fasit-badge {
+    margin-left: auto; font-size: 11px; font-weight: bold;
+    color: #fff; background: #c0392b; padding: 3px 10px;
+    border-radius: 3px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #map { flex: 1; min-height: 168mm; width: 100%; background: #e8e4db; }
+  footer {
+    padding: 8px 28px; border-top: 1px solid #ccc;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  footer .answer-line {
+    font-size: 11px; color: #555; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  footer .answer-box {
+    border-bottom: 1px solid #1a1a1a; width: 260px; height: 18px; display: inline-block;
+  }
+  @media print {
+    body { background: white; }
+    .page { width: 297mm; margin: 0; box-shadow: none; }
+    @page { size: A4 landscape; margin: 0; }
+  }
+
+  /* Landmark SVG icons */
+  .lm-svg-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    white-space: nowrap; background: none; border: none;
+  }
+  .lm-svg-wrap img {
+    width: 36px; height: 36px;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+  }
+
+  /* Landmark emoji icons */
+  .lm-emoji-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    white-space: nowrap; background: none; border: none;
+  }
+  .lm-emoji { font-size: 20px; line-height: 1; }
+
+  /* Plain dot landmark */
+  .lm-dot-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    white-space: nowrap; background: none; border: none;
+  }
+  .lm-dot {
+    width: 8px; height: 8px; background: #555; border-radius: 50%;
+    border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 2px;
+  }
+
+  /* Shared label style */
+  .lm-label {
+    font-family: 'Georgia', serif; font-size: 10px; color: #333;
+    letter-spacing: 0.03em; text-align: center; font-style: italic;
+    text-shadow: 0 1px 3px #faf8f3, 0 -1px 3px #faf8f3,
+                 1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
+  }
+
+  /* Fasit answer label on quiz markers */
+  .answer-label-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    white-space: nowrap;
+  }
+  .answer-dot {
+    width: 24px; height: 24px;
+    background: #c0392b; border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    margin-bottom: 3px;
+  }
+  .answer-text {
+    font-family: 'Georgia', serif; font-size: 10px; font-weight: bold;
+    color: #1a1a1a; letter-spacing: 0.03em; text-align: center;
+    text-shadow: 0 1px 3px #faf8f3, 0 -1px 3px #faf8f3,
+                 1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
+    max-width: 90px; line-height: 1.2;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Oslo</h1>
+    <p>Hva representerer markørene på kartet?</p>
+    
+  </header>
+  <div id="map"></div>
+  <footer>
+    <span class="answer-line">Svar: <span class="answer-box"></span></span>
+    <span style="font-size:10px; color:#aaa; letter-spacing:0.04em;">PUBQUIZ</span>
+  </footer>
+</div>
+<script>
+  var map = L.map('map', { zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  var locations = [
+    {
+        "lat": 59.9499,
+        "lng": 10.736
+    },
+    {
+        "lat": 59.9472,
+        "lng": 10.7751
+    },
+    {
+        "lat": 59.9142,
+        "lng": 10.7379
+    },
+    {
+        "lat": 59.9117,
+        "lng": 10.7526
+    },
+    {
+        "lat": 59.8612,
+        "lng": 10.8005
+    }
+];
+  var bounds = L.latLngBounds();
+  var isFasit = false;
+
+  locations.forEach(function(loc) {
+    if (isFasit && loc.answer) {
+      // Fasit: show dot + answer label
+      var dotSize = 24;
+      var html = '<div class="answer-label-wrap">'
+               + '<div class="answer-dot"></div>'
+               + '<div class="answer-text">' + loc.answer + '</div>'
+               + '</div>';
+      var icon = L.divIcon({
+        className: '',
+        html: html,
+        iconSize: [96, 40],
+        iconAnchor: [48, dotSize / 2 + 3]
+      });
+      L.marker([loc.lat, loc.lng], { icon: icon }).addTo(map);
+    } else {
+      var d = 24;
+      var dotHtml = '<div style="width:'+d+'px;height:'+d+'px;background:#c0392b;'
+                  + 'border-radius:50%;border:3px solid #ffffff;'
+                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>';
+      var dotIcon = L.divIcon({
+        className: '',
+        html: dotHtml,
+        iconSize: [d, d],
+        iconAnchor: [d/2, d/2]
+      });
+      L.marker([loc.lat, loc.lng], { icon: dotIcon, zIndexOffset: 1000 }).addTo(map);
+    }
+    bounds.extend([loc.lat, loc.lng]);
+  });
+
+  map.fitBounds(bounds, { padding: [60, 60] });
+
+  var landmarks = [
+    {
+        "lat": 59.9218,
+        "lng": 10.7269,
+        "label": "Majorstuen",
+        "icon": "",
+        "svg_b64": ""
+    },
+    {
+        "lat": 59.9172,
+        "lng": 10.7276,
+        "label": "Slottet",
+        "icon": "",
+        "svg_b64": ""
+    },
+    {
+        "lat": 59.906,
+        "lng": 10.743,
+        "label": "Sentrum",
+        "icon": "",
+        "svg_b64": ""
+    }
+];
+  landmarks.forEach(function(lm) {
+    var html, anchorY;
+    if (lm.svg_b64) {
+      var sz = 36;
+      html = '<div class="lm-svg-wrap">'
+           + '<img src="data:image/svg+xml;base64,' + lm.svg_b64 + '" />'
+           + '<div class="lm-label">' + lm.label + '</div></div>';
+      anchorY = sz;
+    } else if (lm.icon) {
+      html = '<div class="lm-emoji-wrap">'
+           + '<span class="lm-emoji">' + lm.icon + '</span>'
+           + '<div class="lm-label">' + lm.label + '</div></div>';
+      anchorY = 24;
+    } else {
+      html = '<div class="lm-dot-wrap">'
+           + '<div class="lm-dot"></div>'
+           + '<div class="lm-label">' + lm.label + '</div></div>';
+      anchorY = 10;
+    }
+    var lIcon = L.divIcon({
+      className: '',
+      html: html,
+      iconSize: [100, 50],
+      iconAnchor: [50, anchorY]
+    });
+    L.marker([lm.lat, lm.lng], { icon: lIcon, interactive: false, zIndexOffset: -100 })
+      .addTo(map);
+  });
+</script>
+</body>
+</html>

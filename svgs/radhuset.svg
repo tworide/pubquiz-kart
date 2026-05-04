@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Left tower -->
+  <rect x="4" y="8" width="14" height="32" fill="#2c3e50"/>
+  <!-- Right tower -->
+  <rect x="30" y="8" width="14" height="32" fill="#2c3e50"/>
+  <!-- Low connecting wing -->
+  <rect x="4" y="28" width="40" height="12" fill="#2c3e50"/>
+  <!-- Windows left tower -->
+  <rect x="7"  y="13" width="5" height="4" fill="#a8c4d4"/>
+  <rect x="7"  y="21" width="5" height="4" fill="#a8c4d4"/>
+  <!-- Windows right tower -->
+  <rect x="36" y="13" width="5" height="4" fill="#a8c4d4"/>
+  <rect x="36" y="21" width="5" height="4" fill="#a8c4d4"/>
+  <!-- Clock left tower -->
+  <circle cx="11" cy="9" r="3" fill="white" stroke="#1a252f" stroke-width="0.5"/>
+  <!-- Clock right tower -->
+  <circle cx="37" cy="9" r="3" fill="white" stroke="#1a252f" stroke-width="0.5"/>
+  <!-- Entrance -->
+  <rect x="20" y="32" width="8" height="8" rx="4 4 0 0" fill="#1a252f"/>
+  <!-- Base -->
+  <rect x="2" y="40" width="44" height="3" fill="#1a252f"/>
+  <rect x="0" y="43" width="48" height="2" fill="#1a252f"/>
+</svg>
