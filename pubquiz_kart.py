@@ -56,7 +56,19 @@ HTML_TEMPLATE = """\
     color: #fff; background: #c0392b; padding: 3px 10px;
     border-radius: 3px; letter-spacing: 0.08em; text-transform: uppercase;
   }}
-  #map {{ flex: 1; min-height: 168mm; width: 100%; background: #e8e4db; }}
+  #map {{ flex: 1; min-height: 168mm; width: 100%; background: #e8e4db; position: relative; }}
+  #inset-map {{
+    position: absolute; bottom: 16px; right: 16px;
+    width: {inset_size}px; height: {inset_size}px; z-index: 1000;
+    border: 2px solid #1a1a1a; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    background: #e8e4db;
+  }}
+  .inset-label {{
+    position: absolute; top: 3px; left: 6px; z-index: 1001;
+    font-family: 'Georgia', serif; font-size: 9px; font-weight: bold;
+    color: #1a1a1a; letter-spacing: 0.06em; text-transform: uppercase;
+    text-shadow: 0 0 3px #faf8f3;
+  }}
   footer {{
     padding: 8px 28px; border-top: 1px solid #ccc;
     display: flex; justify-content: space-between; align-items: center;
@@ -137,7 +149,9 @@ HTML_TEMPLATE = """\
     <p>{header_text}</p>
     {fasit_badge}
   </header>
-  <div id="map"></div>
+  <div id="map">
+    {inset_div}
+  </div>
   <footer>
     {footer_content}
     <span style="font-size:10px; color:#aaa; letter-spacing:0.04em;">PUBQUIZ</span>
@@ -153,8 +167,8 @@ HTML_TEMPLATE = """\
   var bounds = L.latLngBounds();
   var isFasit = {is_fasit};
 
-  locations.forEach(function(loc, idx) {{
-    var num = idx + 1;
+  locations.forEach(function(loc) {{
+    var num = loc.num;
     if (isFasit && loc.answer) {{
       var dotSize = {marker_diameter};
       var html = '<div class="answer-label-wrap">'
@@ -187,7 +201,7 @@ HTML_TEMPLATE = """\
     bounds.extend([loc.lat, loc.lng]);
   }});
 
-  map.fitBounds(bounds, {{ padding: [{fit_padding}, {fit_padding}] }});
+  {fit_command}
   L.control.scale({{ imperial: false, position: 'bottomright' }}).addTo(map);
 
   var landmarks = {landmarks_json};
@@ -217,6 +231,8 @@ HTML_TEMPLATE = """\
     L.marker([lm.lat, lm.lng], {{ icon: lIcon, interactive: false, zIndexOffset: -100 }})
       .addTo(map);
   }});
+
+  {inset_js}
 </script>
 </body>
 </html>
@@ -243,6 +259,8 @@ def build_map(config_path: Path, output_path: Path, fasit: bool = False,
     answer_label  = cfg.get("answer_label", "Svar")
     tile_style    = cfg.get("tile_style", "light_all")
     fit_padding   = cfg.get("fit_padding", 60)
+    fit_zoom      = cfg.get("fit_zoom")
+    inset_size    = int(cfg.get("inset_size", 210))
     marker_color  = cfg.get("marker_color", "#c0392b")
     marker_border = cfg.get("marker_border", "#ffffff")
     marker_radius = int(cfg.get("marker_radius", 12))
@@ -260,14 +278,31 @@ def build_map(config_path: Path, output_path: Path, fasit: bool = False,
         else:
             svg_dir = config_path.parent.parent / "svgs"
 
-    # Build locations JSON
+    # Split markers into main and inset
+    main_markers  = [m for m in markers if not m.get("inset")]
+    inset_markers = [m for m in markers if m.get("inset")]
+
+    # Build locations JSON (main only, preserving global numbering)
     locs = []
-    for m in markers:
-        entry = {"lat": m["lat"], "lng": m["lng"]}
+    for i, m in enumerate(markers):
+        if m.get("inset"):
+            continue
+        entry = {"lat": m["lat"], "lng": m["lng"], "num": i + 1}
         if fasit and "answer" in m:
             entry["answer"] = m["answer"]
         locs.append(entry)
     locations_json = json.dumps(locs, ensure_ascii=False, indent=4)
+
+    # Build inset locations JSON
+    inset_locs = []
+    for i, m in enumerate(markers):
+        if not m.get("inset"):
+            continue
+        entry = {"lat": m["lat"], "lng": m["lng"], "num": i + 1}
+        if fasit and "answer" in m:
+            entry["answer"] = m["answer"]
+        inset_locs.append(entry)
+    inset_locs_json = json.dumps(inset_locs, ensure_ascii=False, indent=4)
 
     # Build landmarks JSON (embed SVGs as base64)
     lm_list = []
@@ -290,7 +325,54 @@ def build_map(config_path: Path, output_path: Path, fasit: bool = False,
         lm_list.append(entry)
     landmarks_json = json.dumps(lm_list, ensure_ascii=False, indent=4)
 
+    # Inset map
+    if inset_markers:
+        inset_title = inset_markers[0].get("label") or inset_markers[0].get("answer", "Detalj")
+        inset_div = f'<div id="inset-map"><div class="inset-label">{inset_title}</div></div>'
+        d  = marker_diameter
+        mc = marker_color
+        mb = marker_border
+        ts = tile_style
+        inset_js = (
+            f"  var insetLocs = {inset_locs_json};\n"
+            f"  var insetMap = L.map('inset-map', {{ zoomControl: false, attributionControl: false }});\n"
+            f"  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/{ts}/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 19 }}).addTo(insetMap);\n"
+            f"  insetLocs.forEach(function(loc) {{\n"
+            f"    var num = loc.num;\n"
+            f"    if (isFasit && loc.answer) {{\n"
+            f"      var dotSize = {d};\n"
+            f"      var html = '<div class=\"answer-label-wrap\"><div class=\"answer-dot\">' + num + '</div>'\n"
+            f"               + '<div class=\"answer-text\">' + loc.answer + '</div></div>';\n"
+            f"      var icon = L.divIcon({{ className: '', html: html, iconSize: [96, 44], iconAnchor: [48, dotSize/2+3] }});\n"
+            f"      L.marker([loc.lat, loc.lng], {{ icon: icon, zIndexOffset: 1000 }}).addTo(insetMap);\n"
+            f"    }} else {{\n"
+            f"      var d = {d};\n"
+            f"      var dotHtml = '<div style=\"width:'+d+'px;height:'+d+'px;background:{mc};'\n"
+            f"                  + 'border-radius:50%;border:3px solid {mb};'\n"
+            f"                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);'\n"
+            f"                  + 'display:flex;align-items:center;justify-content:center;'\n"
+            f"                  + 'font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#fff;\">'\n"
+            f"                  + num + '</div>';\n"
+            f"      var dotIcon = L.divIcon({{ className: '', html: dotHtml, iconSize: [d, d], iconAnchor: [d/2, d/2] }});\n"
+            f"      L.marker([loc.lat, loc.lng], {{ icon: dotIcon, zIndexOffset: 1000 }}).addTo(insetMap);\n"
+            f"    }}\n"
+            f"  }});\n"
+            f"  insetMap.setView([insetLocs[0].lat, insetLocs[0].lng], 14);\n"
+        )
+    else:
+        inset_div = ""
+        inset_js  = ""
+
     # Mode-specific strings
+    if fit_zoom:
+        lats = [m["lat"] for m in markers]
+        lngs = [m["lng"] for m in markers]
+        center_lat = (min(lats) + max(lats)) / 2
+        center_lng = (min(lngs) + max(lngs)) / 2
+        fit_command = f"map.setView([{center_lat}, {center_lng}], {fit_zoom});"
+    else:
+        fit_command = f"map.fitBounds(bounds, {{ padding: [{fit_padding}, {fit_padding}] }});"
+
     mode_label    = "Fasit" if fasit else "Pubquiz"
     header_text   = f"FASIT – {question}" if fasit else question
     fasit_badge   = '<span class="fasit-badge">Fasit</span>' if fasit else ""
@@ -310,6 +392,7 @@ def build_map(config_path: Path, output_path: Path, fasit: bool = False,
         answer_label    = answer_label,
         tile_style      = tile_style,
         fit_padding     = fit_padding,
+        fit_command     = fit_command,
         marker_color    = marker_color,
         marker_border   = marker_border,
         marker_radius   = marker_radius,
@@ -318,6 +401,9 @@ def build_map(config_path: Path, output_path: Path, fasit: bool = False,
         locations_json  = locations_json,
         landmarks_json  = landmarks_json,
         footer_content  = footer_content,
+        inset_size      = inset_size,
+        inset_div       = inset_div,
+        inset_js        = inset_js,
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

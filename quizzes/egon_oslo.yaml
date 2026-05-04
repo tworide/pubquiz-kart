@@ -8,12 +8,14 @@ question: "Hva representerer markørene på kartet?"
 answer_label: "Svar"
 
 # tile_style: light_all | dark_all | voyager | light_nolabels
-tile_style: light_all
+tile_style: voyager
 fit_padding: 60
 
 marker_color: "#c0392b"
 marker_border: "#ffffff"
 marker_radius: 14
+
+inset_size: 250
 
 # Størrelse på SVG-landemerke-ikoner (piksler)
 landmark_svg_size: 36
@@ -36,6 +38,8 @@ markers:
   - lat: 59.8612
     lng: 10.8005
     answer: "Egon Nordstrand"
+    label: "Nordstrand"
+    inset: true
 
 # ─── LANDEMERKER ──────────────────────────────
 # Kun stedsnavn for geografisk orientering – ingen overlapp med markører
@@ -49,4 +53,7 @@ landmarks:
   - lat: 59.9060
     lng: 10.7430
     label: "Sentrum"
+  - lat: 59.945133
+    lng: 10.776968
+    label: "Storo"
 

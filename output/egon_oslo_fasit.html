@@ -27,7 +27,19 @@
     color: #fff; background: #c0392b; padding: 3px 10px;
     border-radius: 3px; letter-spacing: 0.08em; text-transform: uppercase;
   }
-  #map { flex: 1; min-height: 168mm; width: 100%; background: #e8e4db; }
+  #map { flex: 1; min-height: 168mm; width: 100%; background: #e8e4db; position: relative; }
+  #inset-map {
+    position: absolute; bottom: 16px; right: 16px;
+    width: 250px; height: 250px; z-index: 1000;
+    border: 2px solid #1a1a1a; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    background: #e8e4db;
+  }
+  .inset-label {
+    position: absolute; top: 3px; left: 6px; z-index: 1001;
+    font-family: 'Georgia', serif; font-size: 9px; font-weight: bold;
+    color: #1a1a1a; letter-spacing: 0.06em; text-transform: uppercase;
+    text-shadow: 0 0 3px #faf8f3;
+  }
   footer {
     padding: 8px 28px; border-top: 1px solid #ccc;
     display: flex; justify-content: space-between; align-items: center;
@@ -108,7 +120,9 @@
     <p>FASIT – Hva representerer markørene på kartet?</p>
     <span class="fasit-badge">Fasit</span>
   </header>
-  <div id="map"></div>
+  <div id="map">
+    <div id="inset-map"><div class="inset-label">Nordstrand</div></div>
+  </div>
   <footer>
     <span style="font-size:11px;color:#c0392b;font-weight:bold;letter-spacing:0.06em;text-transform:uppercase;">FASIT – IKKE DEL MED DELTAKERE</span>
     <span style="font-size:10px; color:#aaa; letter-spacing:0.04em;">PUBQUIZ</span>
@@ -116,7 +130,7 @@
 </div>
 <script>
   var map = L.map('map', { zoomControl: false, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     maxZoom: 19
   }).addTo(map);
 
@@ -124,34 +138,33 @@
     {
         "lat": 59.9499,
         "lng": 10.736,
+        "num": 1,
         "answer": "Egon Ullevål"
     },
     {
         "lat": 59.9472,
         "lng": 10.7751,
+        "num": 2,
         "answer": "Egon Storo"
     },
     {
         "lat": 59.9142,
         "lng": 10.7379,
+        "num": 3,
         "answer": "Egon Karl Johan"
     },
     {
         "lat": 59.9117,
         "lng": 10.7526,
+        "num": 4,
         "answer": "Egon Byporten"
-    },
-    {
-        "lat": 59.8612,
-        "lng": 10.8005,
-        "answer": "Egon Nordstrand"
     }
 ];
   var bounds = L.latLngBounds();
   var isFasit = true;
 
-  locations.forEach(function(loc, idx) {
-    var num = idx + 1;
+  locations.forEach(function(loc) {
+    var num = loc.num;
     if (isFasit && loc.answer) {
       var dotSize = 28;
       var html = '<div class="answer-label-wrap">'
@@ -208,6 +221,13 @@
         "label": "Sentrum",
         "icon": "",
         "svg_b64": ""
+    },
+    {
+        "lat": 59.945133,
+        "lng": 10.776968,
+        "label": "Storo",
+        "icon": "",
+        "svg_b64": ""
     }
 ];
   landmarks.forEach(function(lm) {
@@ -236,6 +256,39 @@
     L.marker([lm.lat, lm.lng], { icon: lIcon, interactive: false, zIndexOffset: -100 })
       .addTo(map);
   });
+
+    var insetLocs = [
+    {
+        "lat": 59.8612,
+        "lng": 10.8005,
+        "num": 5,
+        "answer": "Egon Nordstrand"
+    }
+];
+  var insetMap = L.map('inset-map', { zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(insetMap);
+  insetLocs.forEach(function(loc) {
+    var num = loc.num;
+    if (isFasit && loc.answer) {
+      var dotSize = 28;
+      var html = '<div class="answer-label-wrap"><div class="answer-dot">' + num + '</div>'
+               + '<div class="answer-text">' + loc.answer + '</div></div>';
+      var icon = L.divIcon({ className: '', html: html, iconSize: [96, 44], iconAnchor: [48, dotSize/2+3] });
+      L.marker([loc.lat, loc.lng], { icon: icon, zIndexOffset: 1000 }).addTo(insetMap);
+    } else {
+      var d = 28;
+      var dotHtml = '<div style="width:'+d+'px;height:'+d+'px;background:#c0392b;'
+                  + 'border-radius:50%;border:3px solid #ffffff;'
+                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);'
+                  + 'display:flex;align-items:center;justify-content:center;'
+                  + 'font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#fff;">'
+                  + num + '</div>';
+      var dotIcon = L.divIcon({ className: '', html: dotHtml, iconSize: [d, d], iconAnchor: [d/2, d/2] });
+      L.marker([loc.lat, loc.lng], { icon: dotIcon, zIndexOffset: 1000 }).addTo(insetMap);
+    }
+  });
+  insetMap.setView([insetLocs[0].lat, insetLocs[0].lng], 14);
+
 </script>
 </body>
 </html>
