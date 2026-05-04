@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────
+#  PUBQUIZ KART – KONFIGURASJON
+#  Rediger denne filen for å lage nye varianter
+# ─────────────────────────────────────────────
+
+title: "Oslo"
+question: "Hva representerer markørene på kartet?"
+answer_label: "Svar"
+
+# tile_style: light_all | dark_all | voyager | light_nolabels
+tile_style: light_all
+fit_padding: 60
+
+marker_color: "#c0392b"
+marker_border: "#ffffff"
+marker_radius: 12
+
+# Størrelse på SVG-landemerke-ikoner (piksler)
+landmark_svg_size: 36
+
+# ─── QUIZ-MARKØRER ────────────────────────────
+# answer: brukes kun i fasitversjonen (--fasit eller --begge)
+markers:
+  - lat: 59.9113
+    lng: 10.7495
+    answer: "Karl Johan"
+  - lat: 59.9129
+    lng: 10.7383
+    answer: "Stortingsgata"
+  - lat: 59.9113
+    lng: 10.7523
+    answer: "Oslo S"
+  - lat: 59.9140
+    lng: 10.7190
+    answer: "Solli Plass"
+  - lat: 59.9500
+    lng: 10.7665
+    answer: "Nydalen"
+  - lat: 59.9309
+    lng: 10.7926
+    answer: "Løren"
+  - lat: 59.9199
+    lng: 10.6841
+    answer: "Skøyen"
+  - lat: 59.9447
+    lng: 10.7489
+    answer: "Tåsen"
+  - lat: 59.9477
+    lng: 10.6453
+    answer: "Røa"
+  - lat: 59.9132
+    lng: 10.7887
+    answer: "Ensjø"
+
+# ─── LANDEMERKER ──────────────────────────────
+# svg:   filnavn i svgs/-mappen (prioriteres over icon og prikk)
+# icon:  emoji som fallback
+# label: tekst under ikonet
+landmarks:
+  - lat: 59.9109
+    lng: 10.7503
+    svg: oslo_s.svg
+    label: "Oslo S"
+  - lat: 59.9127
+    lng: 10.7396
+    svg: stortinget.svg
+    label: "Stortinget"
+  - lat: 59.9170
+    lng: 10.7275
+    svg: slottet.svg
+    label: "Slottet"
+  - lat: 59.9075
+    lng: 10.7604
+    svg: operaen.svg
+    label: "Operaen"
+  - lat: 59.9065
+    lng: 10.7299
+    svg: radhuset.svg
+    label: "Rådhuset"
+  - lat: 59.9290
+    lng: 10.7534
+    label: "Grünerløkka"
+  - lat: 59.9218
+    lng: 10.7269
+    label: "Majorstuen"
+  - lat: 59.9436
+    lng: 10.7195
+    label: "Blindern"
+  - lat: 59.9048
+    lng: 10.7566
+    label: "Bjørvika"
+  - lat: 59.9460
+    lng: 10.7650
+    label: "Nydalen"
+  - lat: 59.9199
+    lng: 10.7600
+    label: "Tøyen"
+  - lat: 59.9560
+    lng: 10.6350
+    label: "Røa"
+  - lat: 59.9200
+    lng: 10.6840
+    label: "Skøyen"
+  - lat: 59.9351
+    lng: 10.7184
+    icon: "🏥"
+    label: "Ullevål"
