@@ -71,6 +71,7 @@ HTML_TEMPLATE = """\
     body {{ background: white; }}
     .page {{ width: 297mm; margin: 0; box-shadow: none; }}
     @page {{ size: A4 landscape; margin: 0; }}
+    * {{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }}
   }}
 
   /* Landmark SVG icons */
@@ -90,22 +91,12 @@ HTML_TEMPLATE = """\
   }}
   .lm-emoji {{ font-size: 20px; line-height: 1; }}
 
-  /* Plain dot landmark */
-  .lm-dot-wrap {{
-    display: flex; flex-direction: column; align-items: center;
-    white-space: nowrap; background: none; border: none;
-  }}
-  .lm-dot {{
-    width: 8px; height: 8px; background: #555; border-radius: 50%;
-    border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 2px;
-  }}
-
   /* Shared label style */
   .lm-label {{
-    font-family: 'Georgia', serif; font-size: 10px; color: #333;
-    letter-spacing: 0.03em; text-align: center; font-style: italic;
-    text-shadow: 0 1px 3px #faf8f3, 0 -1px 3px #faf8f3,
-                 1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
+    font-family: 'Georgia', serif; font-size: 10px; color: #444;
+    letter-spacing: 0.04em; text-align: center; font-style: italic;
+    text-shadow: 0 0 4px #faf8f3, 0 0 4px #faf8f3, 0 0 4px #faf8f3;
+    white-space: nowrap;
   }}
 
   /* Fasit answer label on quiz markers */
@@ -118,6 +109,8 @@ HTML_TEMPLATE = """\
     background: {marker_color}; border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Georgia', serif; font-size: 11px; font-weight: bold; color: #fff;
     margin-bottom: 3px;
   }}
   .answer-text {{
@@ -127,6 +120,14 @@ HTML_TEMPLATE = """\
                  1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
     max-width: 90px; line-height: 1.2;
   }}
+
+  /* Numbered answer lines in footer */
+  .answer-lines {{ display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }}
+  .answer-entry {{
+    display: flex; align-items: baseline; gap: 5px;
+    font-size: 11px; color: #555; letter-spacing: 0.04em;
+  }}
+  .answer-entry b {{ color: #1a1a1a; font-family: 'Georgia', serif; }}
 </style>
 </head>
 <body>
@@ -152,26 +153,29 @@ HTML_TEMPLATE = """\
   var bounds = L.latLngBounds();
   var isFasit = {is_fasit};
 
-  locations.forEach(function(loc) {{
+  locations.forEach(function(loc, idx) {{
+    var num = idx + 1;
     if (isFasit && loc.answer) {{
-      // Fasit: show dot + answer label
       var dotSize = {marker_diameter};
       var html = '<div class="answer-label-wrap">'
-               + '<div class="answer-dot"></div>'
+               + '<div class="answer-dot">' + num + '</div>'
                + '<div class="answer-text">' + loc.answer + '</div>'
                + '</div>';
       var icon = L.divIcon({{
         className: '',
         html: html,
-        iconSize: [96, 40],
+        iconSize: [96, 44],
         iconAnchor: [48, dotSize / 2 + 3]
       }});
-      L.marker([loc.lat, loc.lng], {{ icon: icon }}).addTo(map);
+      L.marker([loc.lat, loc.lng], {{ icon: icon, zIndexOffset: 1000 }}).addTo(map);
     }} else {{
       var d = {marker_diameter};
       var dotHtml = '<div style="width:'+d+'px;height:'+d+'px;background:{marker_color};'
                   + 'border-radius:50%;border:3px solid {marker_border};'
-                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>';
+                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);'
+                  + 'display:flex;align-items:center;justify-content:center;'
+                  + 'font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#fff;">'
+                  + num + '</div>';
       var dotIcon = L.divIcon({{
         className: '',
         html: dotHtml,
@@ -184,6 +188,7 @@ HTML_TEMPLATE = """\
   }});
 
   map.fitBounds(bounds, {{ padding: [{fit_padding}, {fit_padding}] }});
+  L.control.scale({{ imperial: false, position: 'bottomright' }}).addTo(map);
 
   var landmarks = {landmarks_json};
   landmarks.forEach(function(lm) {{
@@ -200,10 +205,8 @@ HTML_TEMPLATE = """\
            + '<div class="lm-label">' + lm.label + '</div></div>';
       anchorY = 24;
     }} else {{
-      html = '<div class="lm-dot-wrap">'
-           + '<div class="lm-dot"></div>'
-           + '<div class="lm-label">' + lm.label + '</div></div>';
-      anchorY = 10;
+      html = '<div class="lm-label">' + lm.label + '</div>';
+      anchorY = 6;
     }}
     var lIcon = L.divIcon({{
       className: '',

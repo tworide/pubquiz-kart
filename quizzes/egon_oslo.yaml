@@ -13,7 +13,7 @@ fit_padding: 60
 
 marker_color: "#c0392b"
 marker_border: "#ffffff"
-marker_radius: 12
+marker_radius: 14
 
 # Størrelse på SVG-landemerke-ikoner (piksler)
 landmark_svg_size: 36

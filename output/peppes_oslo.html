@@ -42,6 +42,7 @@
     body { background: white; }
     .page { width: 297mm; margin: 0; box-shadow: none; }
     @page { size: A4 landscape; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 
   /* Landmark SVG icons */
@@ -61,22 +62,12 @@
   }
   .lm-emoji { font-size: 20px; line-height: 1; }
 
-  /* Plain dot landmark */
-  .lm-dot-wrap {
-    display: flex; flex-direction: column; align-items: center;
-    white-space: nowrap; background: none; border: none;
-  }
-  .lm-dot {
-    width: 8px; height: 8px; background: #555; border-radius: 50%;
-    border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 2px;
-  }
-
   /* Shared label style */
   .lm-label {
-    font-family: 'Georgia', serif; font-size: 10px; color: #333;
-    letter-spacing: 0.03em; text-align: center; font-style: italic;
-    text-shadow: 0 1px 3px #faf8f3, 0 -1px 3px #faf8f3,
-                 1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
+    font-family: 'Georgia', serif; font-size: 10px; color: #444;
+    letter-spacing: 0.04em; text-align: center; font-style: italic;
+    text-shadow: 0 0 4px #faf8f3, 0 0 4px #faf8f3, 0 0 4px #faf8f3;
+    white-space: nowrap;
   }
 
   /* Fasit answer label on quiz markers */
@@ -89,6 +80,8 @@
     background: #c0392b; border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Georgia', serif; font-size: 11px; font-weight: bold; color: #fff;
     margin-bottom: 3px;
   }
   .answer-text {
@@ -98,6 +91,14 @@
                  1px 0 3px #faf8f3, -1px 0 3px #faf8f3;
     max-width: 90px; line-height: 1.2;
   }
+
+  /* Numbered answer lines in footer */
+  .answer-lines { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .answer-entry {
+    display: flex; align-items: baseline; gap: 5px;
+    font-size: 11px; color: #555; letter-spacing: 0.04em;
+  }
+  .answer-entry b { color: #1a1a1a; font-family: 'Georgia', serif; }
 </style>
 </head>
 <body>
@@ -115,7 +116,7 @@
 </div>
 <script>
   var map = L.map('map', { zoomControl: false, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19
   }).addTo(map);
 
@@ -164,135 +165,44 @@
   var bounds = L.latLngBounds();
   var isFasit = false;
 
-  locations.forEach(function(loc) {
+  locations.forEach(function(loc, idx) {
+    var num = idx + 1;
     if (isFasit && loc.answer) {
-      // Fasit: show dot + answer label
       var dotSize = 24;
       var html = '<div class="answer-label-wrap">'
-               + '<div class="answer-dot"></div>'
+               + '<div class="answer-dot">' + num + '</div>'
                + '<div class="answer-text">' + loc.answer + '</div>'
                + '</div>';
       var icon = L.divIcon({
         className: '',
         html: html,
-        iconSize: [96, 40],
+        iconSize: [96, 44],
         iconAnchor: [48, dotSize / 2 + 3]
       });
-      L.marker([loc.lat, loc.lng], { icon: icon }).addTo(map);
+      L.marker([loc.lat, loc.lng], { icon: icon, zIndexOffset: 1000 }).addTo(map);
     } else {
-      L.circleMarker([loc.lat, loc.lng], {
-        radius: 12,
-        fillColor: '#c0392b',
-        fillOpacity: 1,
-        color: '#ffffff',
-        weight: 3
-      }).addTo(map);
+      var d = 24;
+      var dotHtml = '<div style="width:'+d+'px;height:'+d+'px;background:#c0392b;'
+                  + 'border-radius:50%;border:3px solid #ffffff;'
+                  + 'box-shadow:0 2px 8px rgba(0,0,0,0.5);'
+                  + 'display:flex;align-items:center;justify-content:center;'
+                  + 'font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#fff;">'
+                  + num + '</div>';
+      var dotIcon = L.divIcon({
+        className: '',
+        html: dotHtml,
+        iconSize: [d, d],
+        iconAnchor: [d/2, d/2]
+      });
+      L.marker([loc.lat, loc.lng], { icon: dotIcon, zIndexOffset: 1000 }).addTo(map);
     }
     bounds.extend([loc.lat, loc.lng]);
   });
 
   map.fitBounds(bounds, { padding: [60, 60] });
+  L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
 
-  var landmarks = [
-    {
-        "lat": 59.9109,
-        "lng": 10.7503,
-        "label": "Oslo S",
-        "icon": "",
-        "svg_b64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CiAgPCEtLSBDbG9jayB0b3dlciAtLT4KICA8cmVjdCB4PSIxOSIgeT0iNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEyIiBmaWxsPSIjMmMzZTUwIi8+CiAgPGNpcmNsZSBjeD0iMjQiIGN5PSIxMCIgcj0iMy41IiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8bGluZSB4MT0iMjQiIHkxPSIxMCIgeDI9IjI0IiB5Mj0iNy41IiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSIyNCIgeTE9IjEwIiB4Mj0iMjYiIHkyPSIxMCIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8IS0tIFJvb2YgY29ybmljZSAtLT4KICA8cmVjdCB4PSI1IiB5PSIxNSIgd2lkdGg9IjM4IiBoZWlnaHQ9IjMiIGZpbGw9IiMxYTI1MmYiLz4KICA8IS0tIFN0YXRpb24gZmFjYWRlIC0tPgogIDxyZWN0IHg9IjciIHk9IjE4IiB3aWR0aD0iMzQiIGhlaWdodD0iMjAiIGZpbGw9IiMyYzNlNTAiLz4KICA8IS0tIEFyY2hlZCB3aW5kb3dzIC0tPgogIDxyZWN0IHg9IjEwIiB5PSIyMSIgd2lkdGg9IjciIGhlaWdodD0iMTEiIHJ4PSIzLjUgMy41IDAgMCIgZmlsbD0iI2E4YzRkNCIvPgogIDxyZWN0IHg9IjIwIiB5PSIyMSIgd2lkdGg9IjgiIGhlaWdodD0iMTEiIHJ4PSI0IDQgMCAwIiBmaWxsPSIjYThjNGQ0Ii8+CiAgPHJlY3QgeD0iMzEiIHk9IjIxIiB3aWR0aD0iNyIgaGVpZ2h0PSIxMSIgcng9IjMuNSAzLjUgMCAwIiBmaWxsPSIjYThjNGQ0Ii8+CiAgPCEtLSBTdGVwcyAtLT4KICA8cmVjdCB4PSI1IiB5PSIzOCIgd2lkdGg9IjM4IiBoZWlnaHQ9IjMiIGZpbGw9IiMxYTI1MmYiLz4KICA8cmVjdCB4PSIzIiB5PSI0MSIgd2lkdGg9IjQyIiBoZWlnaHQ9IjMiIGZpbGw9IiMxYTI1MmYiLz4KPC9zdmc+Cg=="
-    },
-    {
-        "lat": 59.9127,
-        "lng": 10.7396,
-        "label": "Stortinget",
-        "icon": "",
-        "svg_b64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CiAgPCEtLSBEb21lIC0tPgogIDxlbGxpcHNlIGN4PSIyNCIgY3k9IjE1IiByeD0iOSIgcnk9IjciIGZpbGw9IiMyYzNlNTAiLz4KICA8cmVjdCB4PSIxNSIgeT0iMTUiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0IiBmaWxsPSIjMmMzZTUwIi8+CiAgPCEtLSBEcnVtIHVuZGVyIGRvbWUgLS0+CiAgPHJlY3QgeD0iMTciIHk9IjExIiB3aWR0aD0iMTQiIGhlaWdodD0iOCIgZmlsbD0iIzJjM2U1MCIvPgogIDwhLS0gQ29sb25uYWRlIC0tPgogIDxyZWN0IHg9IjUiIHk9IjIyIiB3aWR0aD0iMzgiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgogIDxyZWN0IHg9IjgiICB5PSIyNSIgd2lkdGg9IjMiIGhlaWdodD0iMTMiIGZpbGw9IiNlY2YwZjEiLz4KICA8cmVjdCB4PSIxNCIgeT0iMjUiIHdpZHRoPSIzIiBoZWlnaHQ9IjEzIiBmaWxsPSIjZWNmMGYxIi8+CiAgPHJlY3QgeD0iMjAiIHk9IjI1IiB3aWR0aD0iMyIgaGVpZ2h0PSIxMyIgZmlsbD0iI2VjZjBmMSIvPgogIDxyZWN0IHg9IjI2IiB5PSIyNSIgd2lkdGg9IjMiIGhlaWdodD0iMTMiIGZpbGw9IiNlY2YwZjEiLz4KICA8cmVjdCB4PSIzMiIgeT0iMjUiIHdpZHRoPSIzIiBoZWlnaHQ9IjEzIiBmaWxsPSIjZWNmMGYxIi8+CiAgPHJlY3QgeD0iMzgiIHk9IjI1IiB3aWR0aD0iMyIgaGVpZ2h0PSIxMyIgZmlsbD0iI2VjZjBmMSIvPgogIDwhLS0gQm9keSBiZWhpbmQgY29sdW1ucyAtLT4KICA8cmVjdCB4PSI3IiB5PSIyNSIgd2lkdGg9IjM0IiBoZWlnaHQ9IjEzIiBmaWxsPSIjMmMzZTUwIi8+CiAgPCEtLSBDb2x1bW5zIG9uIHRvcCAtLT4KICA8cmVjdCB4PSI4IiAgeT0iMjUiIHdpZHRoPSIzIiBoZWlnaHQ9IjEzIiBmaWxsPSIjZWNmMGYxIi8+CiAgPHJlY3QgeD0iMTQiIHk9IjI1IiB3aWR0aD0iMyIgaGVpZ2h0PSIxMyIgZmlsbD0iI2VjZjBmMSIvPgogIDxyZWN0IHg9IjIwIiB5PSIyNSIgd2lkdGg9IjMiIGhlaWdodD0iMTMiIGZpbGw9IiNlY2YwZjEiLz4KICA8cmVjdCB4PSIyNiIgeT0iMjUiIHdpZHRoPSIzIiBoZWlnaHQ9IjEzIiBmaWxsPSIjZWNmMGYxIi8+CiAgPHJlY3QgeD0iMzIiIHk9IjI1IiB3aWR0aD0iMyIgaGVpZ2h0PSIxMyIgZmlsbD0iI2VjZjBmMSIvPgogIDxyZWN0IHg9IjM4IiB5PSIyNSIgd2lkdGg9IjMiIGhlaWdodD0iMTMiIGZpbGw9IiNlY2YwZjEiLz4KICA8IS0tIFN0ZXBzIC0tPgogIDxyZWN0IHg9IjUiIHk9IjM4IiB3aWR0aD0iMzgiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgogIDxyZWN0IHg9IjMiIHk9IjQxIiB3aWR0aD0iNDIiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgo8L3N2Zz4K"
-    },
-    {
-        "lat": 59.917,
-        "lng": 10.7275,
-        "label": "Slottet",
-        "icon": "",
-        "svg_b64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CiAgPCEtLSBDZW50cmFsIGZsYWcgLS0+CiAgPHJlY3QgeD0iMjMiIHk9IjIiIHdpZHRoPSIyIiBoZWlnaHQ9IjciIGZpbGw9IiMxYTI1MmYiLz4KICA8cG9seWdvbiBwb2ludHM9IjI1LDIgMzIsNSAyNSw4IiBmaWxsPSIjYzAzOTJiIi8+CiAgPCEtLSBDZW50cmFsIGJsb2NrIC0tPgogIDxyZWN0IHg9IjEzIiB5PSI5IiB3aWR0aD0iMjIiIGhlaWdodD0iMjgiIGZpbGw9IiMyYzNlNTAiLz4KICA8IS0tIExlZnQgd2luZyAtLT4KICA8cmVjdCB4PSIzIiB5PSIxNyIgd2lkdGg9IjExIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMzQ0OTVlIi8+CiAgPCEtLSBSaWdodCB3aW5nIC0tPgogIDxyZWN0IHg9IjM0IiB5PSIxNyIgd2lkdGg9IjExIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMzQ0OTVlIi8+CiAgPCEtLSBXaW5kb3dzIGNlbnRyYWwgLS0+CiAgPHJlY3QgeD0iMTciIHk9IjEzIiB3aWR0aD0iNSIgaGVpZ2h0PSI2IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPHJlY3QgeD0iMjYiIHk9IjEzIiB3aWR0aD0iNSIgaGVpZ2h0PSI2IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPHJlY3QgeD0iMTciIHk9IjIzIiB3aWR0aD0iNSIgaGVpZ2h0PSI2IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPHJlY3QgeD0iMjYiIHk9IjIzIiB3aWR0aD0iNSIgaGVpZ2h0PSI2IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPCEtLSBEb29yIC0tPgogIDxyZWN0IHg9IjIxIiB5PSIyOSIgd2lkdGg9IjYiIGhlaWdodD0iOCIgcng9IjMgMyAwIDAiIGZpbGw9IiMxYTI1MmYiLz4KICA8IS0tIFN0ZXBzIC0tPgogIDxyZWN0IHg9IjMiIHk9IjM3IiB3aWR0aD0iNDIiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgogIDxyZWN0IHg9IjEiIHk9IjQwIiB3aWR0aD0iNDYiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgo8L3N2Zz4K"
-    },
-    {
-        "lat": 59.9075,
-        "lng": 10.7604,
-        "label": "Operaen",
-        "icon": "",
-        "svg_b64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CiAgPCEtLSBXYXRlci9mam9yZCAtLT4KICA8cmVjdCB4PSIwIiB5PSI0MCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIGZpbGw9IiNhOGM0ZDQiIG9wYWNpdHk9IjAuNSIvPgogIDwhLS0gTWFpbiBzbG9wZWQgcm9vZiAtIHRoZSBkaXN0aW5jdGl2ZSBnbGFjaWVyIHNoYXBlIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iMiw0MCAyNCwxNCA0NiwyOCA0Niw0MCIgZmlsbD0iIzJjM2U1MCIvPgogIDwhLS0gSW5uZXIgYW5nbGVkIHNlY3Rpb24gLS0+CiAgPHBvbHlnb24gcG9pbnRzPSIxMCw0MCAyNCwyMCAzOCwzMCAzOCw0MCIgZmlsbD0iIzM0NDk1ZSIvPgogIDwhLS0gUm9vZiBoaWdobGlnaHQgbGluZXMgLS0+CiAgPGxpbmUgeDE9IjIiIHkxPSI0MCIgeDI9IjI0IiB5Mj0iMTQiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC40Ii8+CiAgPGxpbmUgeDE9IjI0IiB5MT0iMTQiIHgyPSI0NiIgeTI9IjI4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuNCIvPgogIDwhLS0gR2xhc3MgZmFjYWRlIHN0cmlwIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iMTQsNDAgMjQsMjYgMzQsMzIgMzQsNDAiIGZpbGw9IiNhOGM0ZDQiIG9wYWNpdHk9IjAuNiIvPgogIDwhLS0gQmFzZSAtLT4KICA8cmVjdCB4PSIwIiB5PSIzOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjMiIGZpbGw9IiMxYTI1MmYiLz4KPC9zdmc+Cg=="
-    },
-    {
-        "lat": 59.9065,
-        "lng": 10.7299,
-        "label": "Rådhuset",
-        "icon": "",
-        "svg_b64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CiAgPCEtLSBMZWZ0IHRvd2VyIC0tPgogIDxyZWN0IHg9IjQiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSIzMiIgZmlsbD0iIzJjM2U1MCIvPgogIDwhLS0gUmlnaHQgdG93ZXIgLS0+CiAgPHJlY3QgeD0iMzAiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSIzMiIgZmlsbD0iIzJjM2U1MCIvPgogIDwhLS0gTG93IGNvbm5lY3Rpbmcgd2luZyAtLT4KICA8cmVjdCB4PSI0IiB5PSIyOCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjEyIiBmaWxsPSIjMmMzZTUwIi8+CiAgPCEtLSBXaW5kb3dzIGxlZnQgdG93ZXIgLS0+CiAgPHJlY3QgeD0iNyIgIHk9IjEzIiB3aWR0aD0iNSIgaGVpZ2h0PSI0IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPHJlY3QgeD0iNyIgIHk9IjIxIiB3aWR0aD0iNSIgaGVpZ2h0PSI0IiBmaWxsPSIjYThjNGQ0Ii8+CiAgPCEtLSBXaW5kb3dzIHJpZ2h0IHRvd2VyIC0tPgogIDxyZWN0IHg9IjM2IiB5PSIxMyIgd2lkdGg9IjUiIGhlaWdodD0iNCIgZmlsbD0iI2E4YzRkNCIvPgogIDxyZWN0IHg9IjM2IiB5PSIyMSIgd2lkdGg9IjUiIGhlaWdodD0iNCIgZmlsbD0iI2E4YzRkNCIvPgogIDwhLS0gQ2xvY2sgbGVmdCB0b3dlciAtLT4KICA8Y2lyY2xlIGN4PSIxMSIgY3k9IjkiIHI9IjMiIGZpbGw9IndoaXRlIiBzdHJva2U9IiMxYTI1MmYiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgPCEtLSBDbG9jayByaWdodCB0b3dlciAtLT4KICA8Y2lyY2xlIGN4PSIzNyIgY3k9IjkiIHI9IjMiIGZpbGw9IndoaXRlIiBzdHJva2U9IiMxYTI1MmYiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgPCEtLSBFbnRyYW5jZSAtLT4KICA8cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIHJ4PSI0IDQgMCAwIiBmaWxsPSIjMWEyNTJmIi8+CiAgPCEtLSBCYXNlIC0tPgogIDxyZWN0IHg9IjIiIHk9IjQwIiB3aWR0aD0iNDQiIGhlaWdodD0iMyIgZmlsbD0iIzFhMjUyZiIvPgogIDxyZWN0IHg9IjAiIHk9IjQzIiB3aWR0aD0iNDgiIGhlaWdodD0iMiIgZmlsbD0iIzFhMjUyZiIvPgo8L3N2Zz4K"
-    },
-    {
-        "lat": 59.929,
-        "lng": 10.7534,
-        "label": "Grünerløkka",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.9218,
-        "lng": 10.7269,
-        "label": "Majorstuen",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.9436,
-        "lng": 10.7195,
-        "label": "Blindern",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.9048,
-        "lng": 10.7566,
-        "label": "Bjørvika",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.946,
-        "lng": 10.765,
-        "label": "Nydalen",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.9199,
-        "lng": 10.76,
-        "label": "Tøyen",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.956,
-        "lng": 10.635,
-        "label": "Røa",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.92,
-        "lng": 10.684,
-        "label": "Skøyen",
-        "icon": "",
-        "svg_b64": ""
-    },
-    {
-        "lat": 59.9351,
-        "lng": 10.7184,
-        "label": "Ullevål",
-        "icon": "🏥",
-        "svg_b64": ""
-    }
-];
+  var landmarks = [];
   landmarks.forEach(function(lm) {
     var html, anchorY;
     if (lm.svg_b64) {
@@ -300,17 +210,15 @@
       html = '<div class="lm-svg-wrap">'
            + '<img src="data:image/svg+xml;base64,' + lm.svg_b64 + '" />'
            + '<div class="lm-label">' + lm.label + '</div></div>';
-      anchorY = sz + 2;
+      anchorY = sz;
     } else if (lm.icon) {
       html = '<div class="lm-emoji-wrap">'
            + '<span class="lm-emoji">' + lm.icon + '</span>'
            + '<div class="lm-label">' + lm.label + '</div></div>';
       anchorY = 24;
     } else {
-      html = '<div class="lm-dot-wrap">'
-           + '<div class="lm-dot"></div>'
-           + '<div class="lm-label">' + lm.label + '</div></div>';
-      anchorY = 10;
+      html = '<div class="lm-label">' + lm.label + '</div>';
+      anchorY = 6;
     }
     var lIcon = L.divIcon({
       className: '',
